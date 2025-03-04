@@ -1,28 +1,67 @@
-import { useState } from "react";
-import { TextField, IconButton } from "@mui/material";
-import { Add } from "@mui/icons-material";
+import React, { useState } from "react";
+import "./ChatPage.css";
 
-export default function ChatArea({ selectedItem }) {
-  const [message, setMessage] = useState("");
+const ChatPage = () => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+
+  const sendMessage = () => {
+    if (input.trim() === "") return;
+
+    // Alternate messages left and right
+    const newMessage = {
+      text: input,
+      isLeft: messages.length % 2 === 0, // Alternates messages
+    };
+
+    setMessages([...messages, newMessage]);
+    setInput(""); // Clear input field
+  };
 
   return (
-    <main className="flex-1 flex flex-col justify-between p-4 bg-gray-100">
-      <div className="flex-1 overflow-auto p-4">
-        <p className="text-gray-500">{selectedItem}</p>
-      </div>
+    <div className="chat-container">
+      {/* Sidebar */}
+      <div className="sidebar">Workspace, Projects, etc.</div>
 
-      <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Type a message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <IconButton className="ml-2" color="primary">
-          <Add />
-        </IconButton>
+      {/* Main Content */}
+      <div className="content">
+        {/* Chat Area (where messages appear) */}
+        <div className="chat-box">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`chat-message ${msg.isLeft ? "left" : "right"}`}
+            >
+              {msg.text}
+            </div>
+          ))}
+        </div>
+
+        {/* Suggested Prompts */}
+        <div className="suggested-prompts-container">
+          <div className="suggested-prompts">
+            <div className="prompt-card">Pproject context</div>
+            <div className="prompt-card">System design</div>
+            <div className="prompt-card">ADO tasks</div>
+            <div className="prompt-card">drag and drop</div>
+          </div>
+        </div>
+
+        {/* Prompt Input */}
+        <div className="prompt-input-container">
+          <button className="plus-button">➕</button>
+          <input
+            type="text"
+            className="prompt-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type a message..."
+          />
+          <button className="send-button" onClick={sendMessage}>➡️</button>
+        </div>
       </div>
-    </main>
+    </div>
   );
-}
+};
+
+export default ChatPage;

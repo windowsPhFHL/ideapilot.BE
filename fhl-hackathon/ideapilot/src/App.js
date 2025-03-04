@@ -1,7 +1,7 @@
-import Chatpage from "./Chatpage";
+import ChatPage from "./ChatPage";
 
 function App() {
-  return <Chatpage />;
+  return <ChatPage />;
 }
 
 export default App;
