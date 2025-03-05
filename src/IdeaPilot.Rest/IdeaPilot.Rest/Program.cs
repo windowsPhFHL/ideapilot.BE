@@ -1,22 +1,7 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using IdeaPilot.Rest.SignalR;
+using Microsoft.AspNetCore.SignalR;
 
 namespace IdeaPilot.Rest;
-
-public class ChatHub : Hub
-{
-    public override Task OnConnectedAsync()
-    {
-        return base.OnConnectedAsync();
-    }
-
-    // Called by clients to send a message to everyone.
-    public async Task SendMessage(string user, string message)
-    {
-        // This will call the client-side method 'ReceiveMessage' on all connected clients.
-        await Clients.All.SendAsync("ReceiveMessage", user, message);
-    }
-}
-
 
 public class Program
 {
