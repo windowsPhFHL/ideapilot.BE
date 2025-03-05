@@ -1,8 +1,10 @@
-﻿using Microsoft.Azure.Cosmos;
+﻿using IdeaPilot.Rest.Configuration;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 
 namespace IdeaPilot.Rest.Data.Entities;
 
-public class CosmosDbRepository<T> where T : class
+public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
 {
     private readonly Container _container;
 
@@ -10,16 +12,10 @@ public class CosmosDbRepository<T> where T : class
     /// Initializes the Cosmos DB client, creates the database/container if they don't exist.
     /// </summary>
     /// <param name="accountEndpoint">Cosmos DB endpoint URI.</param>
-    /// <param name="authKey">Cosmos DB primary key.</param>
     /// <param name="databaseId">Name of the database.</param>
     /// <param name="containerId">Name of the container.</param>
     /// <param name="partitionKeyPath">Partition key path (e.g., "/partitionKey").</param>
-    public CosmosDbRepository(
-        string accountEndpoint,
-        string authKey,
-        string databaseId,
-        string containerId,
-        string partitionKeyPath)
+    public CosmosDbRepository(CosmosClient cosmosClient, IOptions<CosmosDbOptions> cosmosDbOptions)
     {
         var cosmosClientOptions = new CosmosClientOptions
         {
@@ -27,13 +23,13 @@ public class CosmosDbRepository<T> where T : class
             // AllowBulkExecution = true
         };
 
-        var client = new CosmosClient(accountEndpoint, authKey, cosmosClientOptions);
+        //var client = new CosmosClient(accountEndpoint, cosmosClientOptions);
 
         // Create the database if it does not exist
-        Database database = client.CreateDatabaseIfNotExistsAsync(databaseId).Result;
+        Database database = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbOptions.Value.DatabaseId).Result;
 
         // Create the container if it does not exist
-        _container = database.CreateContainerIfNotExistsAsync(containerId, partitionKeyPath, 400).Result;
+        _container = database.CreateContainerIfNotExistsAsync(cosmosDbOptions.Value.ContainerId, cosmosDbOptions.Value.PartitionKeyPath, 400).Result;
     }
 
     /// <summary>
@@ -108,5 +104,33 @@ public class CosmosDbRepository<T> where T : class
     public async Task DeleteItemAsync(string id, string partitionKey)
     {
         await _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKey));
+    }
+
+    public async Task CreateContainerIfNotExistsAsync(string containerName, string partitionKeyPath)
+    {
+        // Create the container if it does not exist
+        var containerResponse = _container.Database.CreateContainerIfNotExistsAsync(containerName, partitionKeyPath, 400).Result;
+        if (containerResponse.StatusCode == System.Net.HttpStatusCode.Created)
+        {
+            Console.WriteLine($"Container {containerName} created successfully.");
+        }
+        else
+        {
+            Console.WriteLine($"Container {containerName} already exists.");
+        }
+    }
+
+    public async Task CreateDatabaseIfNotExistsAsync(string databaseName)
+    {
+        // Create the database if it does not exist
+        var databaseResponse = _container.Database.Client.CreateDatabaseIfNotExistsAsync(databaseName).Result;
+        if (databaseResponse.StatusCode == System.Net.HttpStatusCode.Created)
+        {
+            Console.WriteLine($"Database {databaseName} created successfully.");
+        }
+        else
+        {
+            Console.WriteLine($"Database {databaseName} already exists.");
+        }
     }
 }

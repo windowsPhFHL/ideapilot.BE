@@ -7,4 +7,10 @@ public interface ICosmosDbRepository<T> where T : class
     Task<IEnumerable<T>> ListItemsAsync();
     Task<T> UpdateItemAsync(string id, string partitionKey, T item);
     Task DeleteItemAsync(string id, string partitionKey);
+
+    //create a method to create cosmos db container if not exists
+    Task CreateContainerIfNotExistsAsync(string containerName, string partitionKeyPath);
+
+    //create a method to create cosmos db database if not exists
+    Task CreateDatabaseIfNotExistsAsync(string databaseName);
 }

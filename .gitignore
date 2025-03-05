@@ -396,3 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/src/IdeaPilot.Rest/IdeaPilot.Rest/appsettings.json

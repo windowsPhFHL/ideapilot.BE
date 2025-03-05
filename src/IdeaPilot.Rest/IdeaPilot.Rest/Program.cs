@@ -1,4 +1,5 @@
-﻿using IdeaPilot.Rest.Configuration;
+﻿using Azure.Identity;
+using IdeaPilot.Rest.Configuration;
 using IdeaPilot.Rest.Data.Entities;
 using IdeaPilot.Rest.SignalR;
 using Microsoft.AspNetCore.SignalR;
@@ -21,7 +22,7 @@ public class Program
         builder.Services.AddSwaggerGen();
         // Retrieve configuration values (e.g., from appsettings.json, secrets, environment variables, etc.)
 
-        string accountEndpoint = builder.Configuration["Cosmos:Endpoint"];
+        //string accountEndpoint = builder.Configuration["Cosmos:Endpoint"];
              builder.Services.Configure<CosmosDbOptions>(
             builder.Configuration.GetSection("CosmosDb")
         );
@@ -49,6 +50,8 @@ public class Program
             return kernelBuilder.Build();
         });
 
+        //register ChatHub class
+        //builder.Services.AddSingleton(typeof(Hub<>), typeof(ChatHub));
 
         // 2. Register a singleton IKernel
 
@@ -62,7 +65,8 @@ public class Program
             {
             };
 
-            return new CosmosClient(cosmosDbOptions.AccountEndpoint, cosmosDbOptions.AuthKey, cosmosClientOptions);
+            return new CosmosClient(cosmosDbOptions.AccountEndpoint, new DefaultAzureCredential(), cosmosClientOptions);
+            //return new CosmosClient(cosmosDbOptions.AccountEndpoint, cosmosDbOptions.AuthKey, cosmosClientOptions);
         });
         // Register the repository as a singleton or scoped, depending on your needs.
         // Usually, a Cosmos DB client can be a singleton.
