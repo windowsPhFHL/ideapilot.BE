@@ -1,22 +1,22 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using IdeaPilotV1.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
-namespace IdeaPilotV1.Hubs
+namespace IdeaPilot.Rest.Hubs;
+
+public class ChatHub : Hub
 {
-    public class ChatHub : Hub
+    public async Task SendMessage(string user, string message)
     {
-        public async Task SendMessage(string user, string message)
-        {
-            Console.WriteLine($"Received message from {user}: {message}");
+        Console.WriteLine($"Received message from {user}: {message}");
 
-            //AiFoundry.RunAsync(user, message).Wait();
+        //AiFoundry.RunAsync(user, message).Wait();
 
 
-            CosmosDbClient cosmosDbClient = new CosmosDbClient();
-            // Save the message to Cosmos DB
-            await cosmosDbClient.SaveMessageAsync(user, message, Guid.NewGuid().ToString());
+        CosmosDbClient cosmosDbClient = new CosmosDbClient();
+        // Save the message to Cosmos DB
+        await cosmosDbClient.SaveMessageAsync(user, message, Guid.NewGuid().ToString());
 
 
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
-        }
+        await Clients.All.SendAsync("ReceiveMessage", user, message);
     }
 }
