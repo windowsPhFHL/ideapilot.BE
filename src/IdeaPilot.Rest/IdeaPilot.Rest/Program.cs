@@ -27,6 +27,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        Console.WriteLine("Hello World!");
         var builder = WebApplication.CreateBuilder(args);
 
                builder.Services.AddControllers();
@@ -56,8 +57,6 @@ public class Program
             app.UseSwaggerUI();
         }
 
-       
-
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
@@ -76,6 +75,7 @@ public class Program
            // endpoints.MapHub<ChatHub>("/chatHub");
             endpoints.MapHub<ChatHub>("/chatHub").RequireCors("AllowAll");
         });
+
         app.Run();
     }
 }
