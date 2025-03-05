@@ -1,5 +1,9 @@
-﻿using IdeaPilot.Rest.SignalR;
+﻿using IdeaPilot.Rest.Configuration;
+using IdeaPilot.Rest.Data.Entities;
+using IdeaPilot.Rest.SignalR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 
 namespace IdeaPilot.Rest;
 
@@ -14,6 +18,30 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        // Retrieve configuration values (e.g., from appsettings.json, secrets, environment variables, etc.)
+
+        string accountEndpoint = builder.Configuration["Cosmos:Endpoint"];
+             builder.Services.Configure<CosmosDbOptions>(
+            builder.Configuration.GetSection("CosmosDb")
+        );
+
+        // 2. Create a Singleton CosmosClient (the recommended pattern)
+        builder.Services.AddSingleton<CosmosClient>(serviceProvider =>
+        {
+            var cosmosDbOptions = serviceProvider.GetRequiredService<IOptions<CosmosDbOptions>>().Value;
+
+            // You can configure CosmosClientOptions if needed
+            var cosmosClientOptions = new CosmosClientOptions
+            {
+            };
+
+            return new CosmosClient(cosmosDbOptions.AccountEndpoint, cosmosDbOptions.AuthKey, cosmosClientOptions);
+        });
+        // Register the repository as a singleton or scoped, depending on your needs.
+        // Usually, a Cosmos DB client can be a singleton.
+
+        builder.Services.AddSingleton(typeof(ICosmosDbRepository<>), typeof(CosmosDbRepository<>));
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAll",
