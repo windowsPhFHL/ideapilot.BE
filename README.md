@@ -1,1 +1,1 @@
-# ideapilot
+# ideaCopilot

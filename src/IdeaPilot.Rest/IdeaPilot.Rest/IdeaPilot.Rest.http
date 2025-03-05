@@ -1,0 +1,6 @@
+@IdeaPilot.Rest_HostAddress = http://localhost:5215
+
+GET {{IdeaPilot.Rest_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
