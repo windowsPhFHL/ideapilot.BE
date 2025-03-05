@@ -4,6 +4,7 @@ using IdeaPilot.Rest.SignalR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
 
 namespace IdeaPilot.Rest;
 
@@ -24,6 +25,32 @@ public class Program
              builder.Services.Configure<CosmosDbOptions>(
             builder.Configuration.GetSection("CosmosDb")
         );
+
+        // 1. Bind SemanticKernelOptions from config
+        builder.Services.Configure<SemanticKernelOptions>(
+            builder.Configuration.GetSection("SemanticKernel")
+        );
+
+
+        builder.Services.AddSingleton<Kernel>(serviceProvider =>
+        {
+            // (Optional) If you want to pull config from IOptions:
+            var skOptions = serviceProvider.GetRequiredService<IOptions<SemanticKernelOptions>>().Value;
+
+            var kernelBuilder = Kernel.CreateBuilder();
+
+            // If using Azure OpenAI
+            kernelBuilder.AddOpenAIChatCompletion(
+                skOptions.DeploymentName, // "gpt-35-turbo" or similar
+                skOptions.Endpoint, // e.g. "https://contoso.openai.azure.com/"
+                skOptions.ApiKey // your Azure OpenAI Key
+                // optional: apiVersion: "2023-03-15-preview"
+            );
+            return kernelBuilder.Build();
+        });
+
+
+        // 2. Register a singleton IKernel
 
         // 2. Create a Singleton CosmosClient (the recommended pattern)
         builder.Services.AddSingleton<CosmosClient>(serviceProvider =>

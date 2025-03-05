@@ -13,7 +13,3 @@ public class CosmosDbOptions
     // You can add RU/s or any additional settings as needed
     public int Throughput { get; set; } = 400;
 }
-
-        
-
-
