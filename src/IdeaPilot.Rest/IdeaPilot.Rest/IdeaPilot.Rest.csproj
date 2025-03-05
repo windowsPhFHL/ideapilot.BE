@@ -1,5 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -7,14 +6,19 @@
     <UserSecretsId>aspnet-IdeaPilot.Rest-911da33a-885c-4209-9f4f-19af02d24b77</UserSecretsId>
     <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
   </PropertyGroup>
-
   <ItemGroup>
+	  <!-- <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />-->
+	 
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.13" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.13" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.47.2" />
     <PackageReference Include="Microsoft.Identity.Web" Version="3.2.0" />
     <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="3.2.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="Microsoft.KernelMemory.Service.AspNetCore" Version="0.97.250211.1" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.40.1" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.40.1" />
+       <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
