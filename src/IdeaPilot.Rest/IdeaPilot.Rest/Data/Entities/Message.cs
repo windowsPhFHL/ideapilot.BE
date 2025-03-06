@@ -2,7 +2,6 @@
 
 public sealed class Message
 {
-
     //add id as a property, initialize it with a new guid and append `Message_` as a prefix
     public string id { get; set; } = Guid.NewGuid().ToString("N").Insert(0, "Message_");
 
