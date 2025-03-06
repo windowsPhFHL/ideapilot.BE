@@ -87,6 +87,9 @@ public class Program
 
         builder.Services.AddSignalR();
 
+        builder.Services.Configure<AzureDevOpsSettings>(builder.Configuration.GetSection("AzureDevOps"));
+        builder.Services.AddSingleton<AzureDevOpsService>();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
