@@ -32,13 +32,14 @@ public class ChatHub : Hub
         {
             UserId = message.UserId,
             Text = message.Text,
-            Status = "Received"
+            ConversationId = message.ConversationId,
+            Status = "Active"
         };
 
         // Save the message to Cosmos DB
         await _cosmosDbRepository.CreateItemAsync(newMessage, newMessage.UserId.ToString());
 
-        
+
 
         //AiFoundry.RunAsync(user, message).Wait();
 

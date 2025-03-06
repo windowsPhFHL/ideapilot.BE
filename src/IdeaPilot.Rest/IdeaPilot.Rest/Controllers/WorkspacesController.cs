@@ -12,7 +12,7 @@ public class WorkspacesController : ControllerBase
     private readonly Kernel _kernel;
     private readonly ILogger<WorkspacesController> _logger;
 
-    public WorkspacesController(ICosmosDbRepository<Workspace> workspaceRepository,Kernel kernel, ILogger<WorkspacesController> logger)
+    public WorkspacesController(ICosmosDbRepository<Workspace> workspaceRepository, Kernel kernel, ILogger<WorkspacesController> logger)
     {
         _workspaceRepository = workspaceRepository;
         _kernel = kernel;
@@ -23,33 +23,42 @@ public class WorkspacesController : ControllerBase
     [HttpGet]
     public IEnumerable<string> Get()
     {
-        //var func = _kernel.CreateFunctionFromPrompt(string.Empty);
+        //list all workspaces in the cosmos db
+        var workspaces = _workspaceRepository.ListItemsAsync().Result;
 
-        //_kernel.InvokeAsync(func);
-
-        return new string[] { "value1", "value2" };
+        //return the list of workspaces
+        return workspaces.Select(workspace => workspace.Name);
     }
 
-    //generate crud operations for the workspace
+    // POST api/<WorkspacesController>
     [HttpPost]
     public async Task<IActionResult> CreateWorkspace([FromBody] Workspace workspace)
     {
         if (workspace == null)
         {
-            return BadRequest("Workspace cannot be null");
+            return BadRequest("Invalid workspace data");
         }
-        var createdWorkspace = await _workspaceRepository.CreateItemAsync(workspace, workspace.WorkspaceId.ToString());
 
-        //broadcast via signalR
-        //await _signalRHub.Clients.All.SendAsync("WorkspaceCreated", createdWorkspace);
+        //create a new workspace from the request body
+        var newWorkspace = new Workspace
+        {
+            Name = workspace.Name,
+            Description = workspace.Description,
+            AttributeName = workspace.AttributeName
+        };
 
-        return CreatedAtAction(nameof(Get), new { id = createdWorkspace.WorkspaceId }, createdWorkspace);
+        var createdWorkspace = await _workspaceRepository.CreateItemAsync(newWorkspace, newWorkspace.id);
+        if (createdWorkspace == null)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "Error creating workspace");
+        }
+        return CreatedAtAction(nameof(GetWorkspace), new { id = createdWorkspace.id }, createdWorkspace);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetWorkspace(Guid id)
+    public async Task<IActionResult> GetWorkspace(string id)
     {
-        var workspace = await _workspaceRepository.GetItemAsync(id.ToString(), id.ToString());
+        var workspace = await _workspaceRepository.GetItemByPartitionKeyAsync(id);
         if (workspace == null)
         {
             return NotFound();
@@ -60,7 +69,7 @@ public class WorkspacesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateWorkspace(Guid id, [FromBody] Workspace workspace)
     {
-        if (workspace == null || id != workspace.WorkspaceId)
+        if (workspace == null)
         {
             return BadRequest("Invalid workspace data");
         }

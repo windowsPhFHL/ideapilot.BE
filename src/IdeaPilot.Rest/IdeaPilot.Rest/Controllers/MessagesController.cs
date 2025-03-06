@@ -26,8 +26,8 @@ namespace IdeaPilot.Rest.Controllers
         {
 
             
-            var func = _kernel.CreateFunctionFromPrompt(string.Empty);
-            _kernel.InvokeAsync(func);
+            //var func = _kernel.CreateFunctionFromPrompt(string.Empty);
+            //_kernel.InvokeAsync(func);
             return Ok(new string[] { "value1", "value2" });
         }
     }
