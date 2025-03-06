@@ -39,6 +39,10 @@ public class WorkspacesController : ControllerBase
             return BadRequest("Workspace cannot be null");
         }
         var createdWorkspace = await _workspaceRepository.CreateItemAsync(workspace, workspace.WorkspaceId.ToString());
+
+        //broadcast via signalR
+        //await _signalRHub.Clients.All.SendAsync("WorkspaceCreated", createdWorkspace);
+
         return CreatedAtAction(nameof(Get), new { id = createdWorkspace.WorkspaceId }, createdWorkspace);
     }
 

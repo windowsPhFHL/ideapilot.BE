@@ -1,6 +1,8 @@
 ﻿using IdeaPilot.Rest.Data.Entities;
 using IdeaPilot.Rest.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.SemanticKernel;
+using System;
 
 namespace IdeaPilot.Rest.SignalR;
 
@@ -9,25 +11,45 @@ public class ChatHub : Hub
 
     //create a construsctor that takes a Kernel and a CosmosDbClient
     private readonly ILogger<ChatHub> _logger;
-    private readonly ICosmosDbRepository<Chat> _cosmosDbClient;
-    public ChatHub( ILogger<ChatHub> logger, ICosmosDbRepository<Chat> cosmosDbClient)
+    private readonly ICosmosDbRepository<Message> _cosmosDbRepository;
+
+    //add kernel to the constructor
+    private readonly Kernel _kernel;
+    public ChatHub(Kernel kernel, ILogger<ChatHub> logger, ICosmosDbRepository<Message> cosmosDbRepository)
     {
+        _kernel = kernel;
         _logger = logger;
-        _cosmosDbClient = cosmosDbClient;
+        _cosmosDbRepository = cosmosDbRepository;
     }
 
-    public async Task SendMessage(string user, string message)
+    public async Task SendMessage(Message message)
     {
-        Console.WriteLine($"Received message from {user}: {message}");
+        // Log the message
+        _logger.LogInformation($"Received message from {message.UserId}: {message.Text}");
+
+        //createa new message from the message
+        var newMessage = new Message
+        {
+            UserId = message.UserId,
+            Text = message.Text,
+            Status = "Received"
+        };
+
+        // Save the message to Cosmos DB
+        await _cosmosDbRepository.CreateItemAsync(newMessage, newMessage.UserId.ToString());
+
+        
 
         //AiFoundry.RunAsync(user, message).Wait();
-
 
         //CosmosDbClient cosmosDbClient = new CosmosDbClient();
         // Save the message to Cosmos DB
         //await cosmosDbClient.SaveMessageAsync(user, message, Guid.NewGuid().ToString());
 
+        //var func = _kernel.CreateFunctionFromPrompt(string.Empty);
+        //_kernel.InvokeAsync(func);
 
-        await Clients.All.SendAsync("ReceiveMessage", user, message);
+
+        await Clients.All.SendAsync($"Received message from {message.UserId}: {message.Text}");
     }
 }

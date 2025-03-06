@@ -128,4 +128,20 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
             Console.WriteLine($"Database {databaseName} already exists.");
         }
     }
+
+    async Task<IEnumerable<T>> ICosmosDbRepository<T>.ListItemsAsync(string propertyName, string propertyValue)
+    {
+        // Create a SQL query to filter items based on the property name and value
+        string sqlQuery = $"SELECT * FROM c WHERE c.{propertyName} = @propertyValue";
+        var queryDefinition = new QueryDefinition(sqlQuery)
+            .WithParameter("@propertyValue", propertyValue);
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = await query.ReadNextAsync();
+            results.AddRange(response);
+        }
+        return results;
+    }
 }

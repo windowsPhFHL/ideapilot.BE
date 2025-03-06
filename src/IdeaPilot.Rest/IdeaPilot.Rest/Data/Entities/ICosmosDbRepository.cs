@@ -13,4 +13,7 @@ public interface ICosmosDbRepository<T> where T : class
 
     //create a method to create cosmos db database if not exists
     Task CreateDatabaseIfNotExistsAsync(string databaseName);
+
+    //list items in the container based on a property
+    Task<IEnumerable<T>> ListItemsAsync(string propertyName, string propertyValue);
 }
