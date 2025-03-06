@@ -2,6 +2,9 @@
 
 public sealed class Message
 {
+
+    //add Id property
+    public string id { get; set; } = Guid.NewGuid().ToString();
     public string AttributeName { get; set; }
 
     public Guid UserId { get; set; }

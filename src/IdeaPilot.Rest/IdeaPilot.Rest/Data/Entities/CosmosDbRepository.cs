@@ -23,13 +23,8 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
             // AllowBulkExecution = true
         };
 
-        //var client = new CosmosClient(accountEndpoint, cosmosClientOptions);
-
-        // Create the database if it does not exist
-        Database database = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbOptions.Value.DatabaseId).Result;
-
-        // Create the container if it does not exist
-        _container = database.CreateContainerIfNotExistsAsync(cosmosDbOptions.Value.ContainerId, cosmosDbOptions.Value.PartitionKeyPath, 400).Result;
+        //initialize the container
+        _container = cosmosClient.GetContainer(cosmosDbOptions.Value.DatabaseId, cosmosDbOptions.Value.ContainerId);
     }
 
     /// <summary>
