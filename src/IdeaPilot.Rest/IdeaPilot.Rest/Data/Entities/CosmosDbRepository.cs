@@ -23,13 +23,8 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
             // AllowBulkExecution = true
         };
 
-        //var client = new CosmosClient(accountEndpoint, cosmosClientOptions);
-
-        // Create the database if it does not exist
-        Database database = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbOptions.Value.DatabaseId).Result;
-
-        // Create the container if it does not exist
-        _container = database.CreateContainerIfNotExistsAsync(cosmosDbOptions.Value.ContainerId, cosmosDbOptions.Value.PartitionKeyPath, 400).Result;
+        //initialize the container
+        _container = cosmosClient.GetContainer(cosmosDbOptions.Value.DatabaseId, cosmosDbOptions.Value.ContainerId);
     }
 
     /// <summary>
@@ -132,5 +127,21 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
         {
             Console.WriteLine($"Database {databaseName} already exists.");
         }
+    }
+
+    async Task<IEnumerable<T>> ICosmosDbRepository<T>.ListItemsAsync(string propertyName, string propertyValue)
+    {
+        // Create a SQL query to filter items based on the property name and value
+        string sqlQuery = $"SELECT * FROM c WHERE c.{propertyName} = @propertyValue";
+        var queryDefinition = new QueryDefinition(sqlQuery)
+            .WithParameter("@propertyValue", propertyValue);
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = await query.ReadNextAsync();
+            results.AddRange(response);
+        }
+        return results;
     }
 }

@@ -66,7 +66,6 @@ public class Program
             };
 
             return new CosmosClient(cosmosDbOptions.AccountEndpoint, new DefaultAzureCredential(), cosmosClientOptions);
-            //return new CosmosClient(cosmosDbOptions.AccountEndpoint, cosmosDbOptions.AuthKey, cosmosClientOptions);
         });
         // Register the repository as a singleton or scoped, depending on your needs.
         // Usually, a Cosmos DB client can be a singleton.
