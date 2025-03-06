@@ -17,10 +17,10 @@ public class AzureDevOpsService
     private readonly string _areaPath;
     private readonly ILogger<AzureDevOpsService> _logger;
 
-    public AzureDevOpsService(IOptions<AzureDevOpsSettings> settings, ILogger<AzureDevOpsService> logger, IHttpClientFactory httpClientFactory)
+    public AzureDevOpsService(IOptions<AzureDevOpsSettings> settings, ILogger<AzureDevOpsService> logger)
     {
         var config = settings.Value;
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = new HttpClient();
         _organization = config.Organization ?? throw new ArgumentNullException(nameof(_organization));
         _project = config.Project ?? throw new ArgumentNullException(nameof(_project));
         _personalAccessToken = config.PersonalAccessToken ?? throw new ArgumentNullException(nameof(_personalAccessToken));
