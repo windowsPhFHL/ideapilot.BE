@@ -38,7 +38,7 @@ public class AzureDevOpsService
 
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json-patch+json"));
 
-        Console.WriteLine("Harro");
+        _logger.LogInformation("Harro");
         _logger.LogInformation("AzureDevOpsService initialized with organization: {Organization}, project: {Project}", _organization, _project);
     }
 
