@@ -89,10 +89,18 @@ public class Program
         builder.Services.Configure<AzureDevOpsSettings>(builder.Configuration.GetSection("AzureDevOps"));
         builder.Services.AddSingleton<AzureDevOpsService>();
 
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+        
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+        else
         {
             app.UseSwagger();
             app.UseSwaggerUI();

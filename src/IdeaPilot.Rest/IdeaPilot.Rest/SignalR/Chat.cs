@@ -1,23 +1,15 @@
-﻿namespace IdeaPilot.Rest.SignalR;
+﻿using IdeaPilot.Rest.Data.Entities;
 
-public class Chat
+namespace IdeaPilot.Rest.SignalR;
+
+public class Chat : BaseDocument
 {
-      
-
-    public Chat(string user, string message, string wordspaceId)
-    {
-        Id = Guid.NewGuid().ToString();
-        User = user;
-        Message = message;
-        WordspaceId = wordspaceId;
-        Timestamp = DateTime.UtcNow;
-    }
-
-    //create id, user, message, wordspaceId, timestamp
-    public string Id { get; set; }
-    public string User { get; set; }
-    public string Message { get; set; }
-    public string WordspaceId { get; set; }
-    public DateTime Timestamp { get; set; }
-        
+    //create id (initialixed to New Guid), workspaceid, timestamp (initialized to current timestamp), containerType (initialize it with `Chat`)
+    public string id { get; set; } = Guid.NewGuid().ToString("N").Insert(0, "Chat_");
+    public Guid WorkspaceId { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public string ContainerType { get; set; } = "Chat";
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string Status { get; set; } = "Active";
 }

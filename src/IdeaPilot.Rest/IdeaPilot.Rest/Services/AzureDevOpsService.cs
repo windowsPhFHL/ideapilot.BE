@@ -42,9 +42,20 @@ public class AzureDevOpsService
         _logger.LogInformation("AzureDevOpsService initialized with organization: {Organization}, project: {Project}", _organization, _project);
     }
 
-    public async Task<string> CreateWorkItemAsync(string title, string description)
+    public async Task<WorkItemResponse> CreateWorkItemAsync(string title, string description, string type, int? parentId = null)
     {
-        var url = $"https://dev.azure.com/{_organization}/{_project}/_apis/wit/workitems/$Task?api-version=7.1";
+        var relations = parentId.HasValue ? new[]
+        {
+            new
+            {
+                rel = "System.LinkTypes.Hierarchy-Reverse",
+                url = $"{_organization}/{_project}/_apis/wit/workItems/{parentId}"
+            }
+        } : null;
+
+        //var url = $"https://dev.azure.com/{_organization}/{_project}/_apis/wit/workitems/$Task?api-version=7.1";
+        var url = $"https://dev.azure.com/{_organization}/{_project}/_apis/wit/workitems/${type}?api-version=7.1";
+
         _logger.LogInformation("Creating work item using URL: {Url} and area Path: {areaPath}", url, _areaPath);
 
         var workItemData = new List<object>
@@ -53,6 +64,22 @@ public class AzureDevOpsService
             new { op = "add", path = "/fields/System.Description", value = description },
             new { op = "add", path = "/fields/System.AreaPath", value = _areaPath }
         };
+
+        if (parentId.HasValue)
+        {
+            //workItemData.Add(new { op = "add", path = "/relations", value = relations });
+            workItemData.Add(new 
+            {
+                op = "add",
+                path = "/relations/-",
+                value = new
+                {
+                    rel = "System.LinkTypes.Hierarchy-Reverse",
+                    url = $"https://dev.azure.com/{_organization}/{_project}/_apis/wit/workItems/{parentId.Value}",
+                    attributes = new { comment = "Linking task to deliverable" }
+                }
+            });            
+        }
 
         var jsonContent = JsonConvert.SerializeObject(workItemData);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json-patch+json");
@@ -84,7 +111,8 @@ public class AzureDevOpsService
             response.EnsureSuccessStatusCode(); // This will throw if the response code is not 2xx
 
             _logger.LogInformation("Work item created successfully.");
-            return await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<WorkItemResponse>(responseContent);
         }
         catch (UnauthorizedAccessException)
         {
@@ -104,4 +132,10 @@ public class AzureDevOpsService
         }
     }
 
+}
+
+public class WorkItemResponse
+{
+    public int Id { get; set; }
+    // ... other properties you're returning ...
 }

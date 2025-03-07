@@ -1,6 +1,5 @@
 ﻿using IdeaPilot.Rest.Configuration;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
 using Microsoft.Extensions.Options;
 
 namespace IdeaPilot.Rest.Data.Entities;
@@ -36,7 +35,7 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
     /// <returns>The created item.</returns>
     public async Task<T> CreateItemAsync(T item, string partitionKey)
     {
-        var response = await _container.CreateItemAsync(item, new Microsoft.Azure.Cosmos.PartitionKey(partitionKey));
+        var response = await _container.CreateItemAsync(item, new PartitionKey(partitionKey));
         return response.Resource;
     }
 
@@ -50,7 +49,7 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
     {
         try
         {
-            ItemResponse<T> response = await _container.ReadItemAsync<T>(id, new Microsoft.Azure.Cosmos.PartitionKey(partitionKey));
+            ItemResponse<T> response = await _container.ReadItemAsync<T>(id, new PartitionKey(partitionKey));
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -87,7 +86,7 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
     /// <returns>The updated item.</returns>
     public async Task<T> UpdateItemAsync(string id, string partitionKey, T item)
     {
-        var response = await _container.UpsertItemAsync(item, new Microsoft.Azure.Cosmos.PartitionKey(partitionKey));
+        var response = await _container.UpsertItemAsync(item, new PartitionKey(partitionKey));
         return response.Resource;
     }
 
@@ -99,7 +98,7 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
     /// <returns></returns>
     public async Task DeleteItemAsync(string id, string partitionKey)
     {
-        await _container.DeleteItemAsync<T>(id, new Microsoft.Azure.Cosmos.PartitionKey(partitionKey));
+        await _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKey));
     }
 
     public async Task CreateContainerIfNotExistsAsync(string containerName, string partitionKeyPath)
@@ -146,16 +145,17 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
         return results;
     }
 
-    Task<T> ICosmosDbRepository<T>.GetItemByPartitionKeyAsync(string partitionKey)
+    async Task<T> ICosmosDbRepository<T>.GetItemByPartitionKeyAsync(string partitionKey)
     {
-       // Get item by partition key
-        var query = _container.GetItemQueryIterator<T>($"SELECT * FROM c WHERE c.id = '{partitionKey}'");
-
+        // Create a SQL query to filter items based on the partition key
+        string sqlQuery = $"SELECT * FROM c WHERE c.partitionKey = @partitionKey";
+        var queryDefinition = new QueryDefinition(sqlQuery)
+            .WithParameter("@partitionKey", partitionKey);
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
         var results = new List<T>();
-
         while (query.HasMoreResults)
         {
-            FeedResponse<T> response = query.ReadNextAsync().Result;
+            FeedResponse<T> response = await query.ReadNextAsync();
             results.AddRange(response);
         }
         return Task.FromResult(results.FirstOrDefault());
