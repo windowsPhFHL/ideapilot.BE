@@ -5,6 +5,8 @@ using Microsoft.SemanticKernel;
 
 namespace IdeaPilot.Rest.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class ChatController : Controller
     {
         //create crud operations for Chat
@@ -31,6 +33,7 @@ namespace IdeaPilot.Rest.Controllers
 
         // POST api/<ChatController>
         [HttpPost]
+
         public async Task<IActionResult> CreateChat([FromBody] Chat chat)
         {
             if (chat == null)
