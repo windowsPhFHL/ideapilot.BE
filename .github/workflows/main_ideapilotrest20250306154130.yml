@@ -24,13 +24,13 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Restore dependencies
-        run: dotnet restore IdeaPilot.Rest/IdeaPilot.Rest.csproj
+        run: dotnet restore src/IdeaPilot.Rest/IdeaPilot.Rest/IdeaPilot.Rest.csproj
 
       - name: Build with dotnet
-        run: dotnet build IdeaPilot.Rest/IdeaPilot.Rest.csproj --configuration Release
+        run: dotnet build src/IdeaPilot.Rest/IdeaPilot.Rest/IdeaPilot.Rest.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish IdeaPilot.Rest/IdeaPilot.Rest.csproj -c Release -o ./myapp
+        run: dotnet publish src/IdeaPilot.Rest/IdeaPilot.Rest/IdeaPilot.Rest.csproj -c Release -o ./myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
