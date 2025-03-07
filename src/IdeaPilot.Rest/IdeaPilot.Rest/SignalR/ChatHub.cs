@@ -53,4 +53,27 @@ public class ChatHub : Hub
 
         await Clients.All.SendAsync($"Received message from {message.UserId}: {message.Text}");
     }
+    // Method to get all messges from the Cosmos DB
+    public async Task GetAllMessages()
+    {
+        // Get all messages from the Cosmos DB
+        var messages = await _cosmosDbRepository.ListItemsAsync();
+        await Clients.All.SendAsync("GetMessages", messages);
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        await Clients.Caller.SendAsync("GetConnectionId", Context.ConnectionId);
+        //await Clients.Caller.SendAsync("GetAllMessages");
+        await Clients.Caller.SendAsync("GetAllConversations");
+        await base.OnConnectedAsync();
+    }
+
+    public async Task GetAllChatMessages(string chatId)
+    {
+        // Get all messages from the Cosmos DB
+        var messages = await _cosmosDbRepository.ListItemsAsync("chatId", chatId);
+        await Clients.Caller.SendAsync("GetMessages", messages);
+    }
+    // get specific conversation messages using conversationId
 }
