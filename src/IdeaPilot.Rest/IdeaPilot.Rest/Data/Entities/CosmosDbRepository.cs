@@ -158,6 +158,39 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
             FeedResponse<T> response = await query.ReadNextAsync();
             results.AddRange(response);
         }
-        return results.FirstOrDefault();
+        return Task.FromResult(results.FirstOrDefault());
+    }
+
+    Task<T> ICosmosDbRepository<T>.GetItemAsync(string propertyName1, string propertyValue1, string propertyName2, string propertyValue2)
+    {
+        // Create a SQL query to filter items based on the two property names and values
+        string sqlQuery = $"SELECT * FROM c WHERE c.{propertyName1} = @propertyValue1 AND c.{propertyName2} = @propertyValue2";
+        var queryDefinition = new QueryDefinition(sqlQuery)
+            .WithParameter("@propertyValue1", propertyValue1)
+            .WithParameter("@propertyValue2", propertyValue2);
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = query.ReadNextAsync().Result;
+            results.AddRange(response);
+        }
+        return Task.FromResult(results.FirstOrDefault());
+    }
+
+    Task<T> ICosmosDbRepository<T>.GetItemSync(string propertyName1, string propertyValue1)
+    {
+        // Create a SQL query to filter items based on the property name and value
+        string sqlQuery = $"SELECT * FROM c WHERE c.{propertyName1} = @propertyValue1";
+        var queryDefinition = new QueryDefinition(sqlQuery)
+            .WithParameter("@propertyValue1", propertyValue1);
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = query.ReadNextAsync().Result;
+            results.AddRange(response);
+        }
+        return Task.FromResult(results.FirstOrDefault());
     }
 }

@@ -21,13 +21,13 @@ public class WorkspacesController : ControllerBase
 
     // GET: api/<WorkspacesController>
     [HttpGet]
-    public IEnumerable<string> Get()
+    public IEnumerable<Workspace> Get()
     {
         //list all workspaces in the cosmos db
-        var workspaces = _workspaceRepository.ListItemsAsync().Result;
+        var workspaces = _workspaceRepository.ListItemsAsync("ContainerType", "Workspace").Result;
 
         //return the list of workspaces
-        return workspaces.Select(workspace => workspace.Name);
+        return workspaces;// workspaces.Select(workspace => new Workspace(workspace.WorkspaceId, workspace.Name, workspace.Description));
     }
 
     // POST api/<WorkspacesController>

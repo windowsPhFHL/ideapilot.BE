@@ -7,7 +7,7 @@ public sealed class Message
 
     public Guid UserId { get; set; }
 
-    public Guid ConversationId { get; set; }
+    public Guid ChatId { get; set; }
 
     public string Text { get; set; }
 

@@ -2,7 +2,7 @@
 
 public sealed class Workspace : BaseDocument
 {
-    //add id as a property, initialize it with a new guid and append `Workspace_` as a prefix
+       //add id as a property, initialize it with a new guid and append `Workspace_` as a prefix
     public string id { get; set; } = Guid.NewGuid().ToString("N").Insert(0, "Workspace_");
     public Guid WorkspaceId { get; set; } = Guid.NewGuid();
     public string AttributeName { get; set; }
