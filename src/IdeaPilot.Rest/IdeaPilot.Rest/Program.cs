@@ -97,8 +97,13 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+        else
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
 
-        app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
         app.UseAuthorization();
         app.UseRouting();
