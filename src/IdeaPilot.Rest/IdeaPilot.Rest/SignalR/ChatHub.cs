@@ -32,7 +32,7 @@ public class ChatHub : Hub
         {
             UserId = message.UserId,
             Text = message.Text,
-            ConversationId = message.ConversationId,
+            ChatId = message.ChatId,
             Status = "Active"
         };
 

@@ -68,11 +68,11 @@ public class CosmosDbClient
         //{
         //    Chat response = await container.CreateItemAsync<Chat>(item, new PartitionKey(wordspaceId));
         //    // Print the response
-        //    Console.WriteLine($"Item created with id: {response.Id}");
+        //    Console.WriteLine($"Item created with id: {response.id}");
         //}
         //catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
         //{
-        //    Console.WriteLine($"Item with id {item.Id} already exists.");
+        //    Console.WriteLine($"Item with id {item.id} already exists.");
         //}
         //throw new NotImplementedException();
     }

@@ -20,4 +20,9 @@ public interface ICosmosDbRepository<T> where T : class
 
     //list items in the container based on a property
     Task<IEnumerable<T>> ListItemsAsync(string propertyName, string propertyValue);
+
+    //create a method to get item in the container based on two properties
+    Task<T> GetItemAsync(string propertyName1, string propertyValue1, string propertyName2, string propertyValue2);
+
+    Task<T> GetItemSync(string propertyName1, string propertyValue1);
 }
