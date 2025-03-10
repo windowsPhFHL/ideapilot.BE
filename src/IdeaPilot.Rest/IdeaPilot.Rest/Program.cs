@@ -71,6 +71,17 @@ public class Program
         // Usually, a Cosmos DB client can be a singleton.
 
         builder.Services.AddSingleton(typeof(ICosmosDbRepository<>), typeof(CosmosDbRepository<>));
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll",
+                builder =>
+                {
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+        });
 
         builder.Services.AddCors(options =>
         {
@@ -113,7 +124,6 @@ public class Program
 
         // Enable the CORS policy
         app.UseCors("AllowAll");
-
         app.MapControllers();
         app.UseEndpoints(endpoints =>
         {
@@ -121,7 +131,7 @@ public class Program
             endpoints.MapControllers();
 
             // Map your SignalR hub
-           // endpoints.MapHub<ChatHub>("/chatHub");
+            //endpoints.MapHub<ChatHub>("/chatHub");
             endpoints.MapHub<ChatHub>("/chatHub").RequireCors("AllowAll");
         });
 

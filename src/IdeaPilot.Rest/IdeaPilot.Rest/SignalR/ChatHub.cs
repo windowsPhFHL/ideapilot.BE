@@ -22,7 +22,7 @@ public class ChatHub : Hub
         _cosmosDbRepository = cosmosDbRepository;
     }
 
-    public async Task SendMessage(Message message)
+  /*public async Task SendMessage(Message message)
     {
         // Log the message
         _logger.LogInformation($"Received message from {message.UserId}: {message.Text}");
@@ -53,27 +53,57 @@ public class ChatHub : Hub
 
         await Clients.All.SendAsync($"Received message from {message.UserId}: {message.Text}");
     }
+    */
+    public async Task SendMessage(string user, string message, string chatId)
+    {
+        // Log the message
+        _logger.LogInformation($"Received message from {user}: {message}");
+
+        //create a new message from the message
+        var newMessage = new Message
+        {
+            UserId = user,
+            Text = message,
+            ChatId = chatId,
+        };
+
+        // Save the message to Cosmos DB
+        await _cosmosDbRepository.CreateItemAsync(newMessage, newMessage.UserId.ToString());
+        await Clients.All.SendAsync($"Received message from {user} :  {message}");
+    }
+
+
     // Method to get all messges from the Cosmos DB
     public async Task GetAllMessages()
     {
         // Get all messages from the Cosmos DB
         var messages = await _cosmosDbRepository.ListItemsAsync();
-        await Clients.All.SendAsync("GetMessages", messages);
+        await Clients.All.SendAsync("GetAllMessages", messages);
     }
 
     public override async Task OnConnectedAsync()
     {
-        await Clients.Caller.SendAsync("GetConnectionId", Context.ConnectionId);
-        //await Clients.Caller.SendAsync("GetAllMessages");
-        await Clients.Caller.SendAsync("GetAllConversations");
+        //await Clients.Caller.SendAsync("ReceiveConnectionId", Context.ConnectionId);
+        //await Clients.Caller.SendAsync("GetAllConversations");
         await base.OnConnectedAsync();
     }
 
-    public async Task GetAllChatMessages(string chatId)
+    // get specific chat messages using chatId
+    public async Task GetChatMessages(string chatId)
     {
         // Get all messages from the Cosmos DB
-        var messages = await _cosmosDbRepository.ListItemsAsync("chatId", chatId);
-        await Clients.Caller.SendAsync("GetMessages", messages);
+        var messages = await _cosmosDbRepository.ListItemsAsync("ChatId", chatId);
+        Console.WriteLine(messages);
+        await Clients.Caller.SendAsync("GetChatMessages", messages);
     }
-    // get specific conversation messages using conversationId
+
+
+    // get specific chat messages using chatId
+    public async Task GetWorkspaceMessages(string chatId)
+    {
+        // Get all messages from the Cosmos DB
+        var messages = await _cosmosDbRepository.ListItemsAsync("WorkspaceId", chatId);
+        Console.WriteLine(messages);
+        await Clients.Caller.SendAsync("GetWorkspaceMessages", messages);
+    }
 }

@@ -5,18 +5,18 @@ using IdeaPilot.Rest.Data.Models;
 
 [ApiController]
 [Route("api/[controller]")]
-public class WorkItemController : ControllerBase
+public class WorkitemsController : ControllerBase
 {
     private readonly AzureDevOpsService _azureDevOpsService;
-    private readonly ILogger<WorkItemController> _logger;
+    private readonly ILogger<WorkitemsController> _logger;
 
-    public WorkItemController(AzureDevOpsService azureDevOpsService, ILogger<WorkItemController> logger)
+    public WorkitemsController(AzureDevOpsService azureDevOpsService, ILogger<WorkitemsController> logger)
     {
         _azureDevOpsService = azureDevOpsService;
         _logger = logger;
     }
 
-    [HttpPost("create")]
+    [HttpPost()]
     public async Task<IActionResult> CreateWorkItem([FromBody] WorkItemRequest request)
     {
         if (request.Deliverables == null || !request.Deliverables.Any())
