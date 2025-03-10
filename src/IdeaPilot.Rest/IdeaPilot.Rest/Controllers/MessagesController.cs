@@ -34,6 +34,7 @@ namespace IdeaPilot.Rest.Controllers
             {
                 UserId = message.UserId,
                 ChatId = message.ChatId,
+                WorkspaceId = message.WorkspaceId,
                 Text = message.Text,
                 Status = message.Status,
             };

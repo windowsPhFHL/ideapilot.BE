@@ -93,8 +93,12 @@ public class ChatHub : Hub
     {
         // Get all messages from the Cosmos DB
         var messages = await _cosmosDbRepository.ListItemsAsync("ChatId", chatId);
-        Console.WriteLine(messages);
-        await Clients.Caller.SendAsync("GetChatMessages", messages);
+
+        // Sort messages by CreatedOn from earliest to latest
+        var sortedMessages = messages.OrderBy(m => m.CreatedOn);
+
+        Console.WriteLine(sortedMessages);
+        await Clients.Caller.SendAsync("GetChatMessages", sortedMessages);
     }
 
 
@@ -103,7 +107,9 @@ public class ChatHub : Hub
     {
         // Get all messages from the Cosmos DB
         var messages = await _cosmosDbRepository.ListItemsAsync("WorkspaceId", chatId);
-        Console.WriteLine(messages);
-        await Clients.Caller.SendAsync("GetWorkspaceMessages", messages);
+        // Sort messages by CreatedOn from earliest to latest
+        var sortedMessages = messages.OrderBy(m => m.CreatedOn);
+        Console.WriteLine(sortedMessages);
+        await Clients.Caller.SendAsync("GetWorkspaceMessages", sortedMessages);
     }
 }

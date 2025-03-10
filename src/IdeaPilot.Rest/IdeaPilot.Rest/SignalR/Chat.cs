@@ -6,7 +6,7 @@ public class Chat : BaseDocument
 {
     //create id (initialixed to New Guid), workspaceid, timestamp (initialized to current timestamp), containerType (initialize it with `Chat`)
     public string id { get; set; } = Guid.NewGuid().ToString("N").Insert(0, "Chat_");
-    public Guid WorkspaceId { get; set; }
+    public string WorkspaceId { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public string ContainerType { get; set; } = "Chat";
     public string Name { get; set; }
