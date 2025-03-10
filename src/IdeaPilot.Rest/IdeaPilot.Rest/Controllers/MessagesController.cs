@@ -20,15 +20,65 @@ namespace IdeaPilot.Rest.Controllers
             _logger = logger;
         }
 
-        // GET: api/<MessagesController>
-        [HttpGet]
-        public IActionResult Get()
+        // endpoint to create a new message
+        [HttpPost]
+        public async Task<IActionResult> CreateMessage([FromBody] Message message)
         {
+            if (message == null)
+            {
+                return BadRequest("Invalid message data");
+            }
 
-            
-            //var func = _kernel.CreateFunctionFromPrompt(string.Empty);
-            //_kernel.InvokeAsync(func);
-            return Ok(new string[] { "value1", "value2" });
+            //create a new message from the request body
+            var newMessage = new Message
+            {
+                UserId = message.UserId,
+                ChatId = message.ChatId,
+                Text = message.Text,
+                Status = message.Status,
+            };
+
+            var createdMessage = await _messagesRepository.CreateItemAsync(newMessage, newMessage.id);
+            if (createdMessage == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating message");
+            }
+            return CreatedAtAction(nameof(GetMessage), new { id = newMessage.id }, createdMessage);
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMessage(string id)
+        {
+            var message = await _messagesRepository.GetItemByPartitionKeyAsync(id);
+            if (message == null)
+            {
+                return NotFound();
+            }
+            return Ok(message);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateMessage(string id, [FromBody] Message message)
+        {
+            if (message == null)
+            {
+                return BadRequest("Invalid message data");
+            }
+            var updatedMessage = await _messagesRepository.UpdateItemAsync(id, id, message);
+            return Ok(updatedMessage);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMessage(string id)
+        {
+            var message = await _messagesRepository.GetItemAsync(id, id);
+            if (message == null)
+            {
+                return NotFound();
+            }
+            await _messagesRepository.DeleteItemAsync(id, id);
+            return NoContent();
+        }
+
     }
 }
