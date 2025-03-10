@@ -106,7 +106,7 @@ namespace IdeaPilot.Rest.Controllers
         public async Task<IEnumerable<Message>> GetChatMessages(string id)
         {
             var messages = await _messageRepository.ListItemsAsync("ChatId", id);
-            return messages;
+            return messages.OrderBy(m => m.CreatedOn);
         }
     }
 }
