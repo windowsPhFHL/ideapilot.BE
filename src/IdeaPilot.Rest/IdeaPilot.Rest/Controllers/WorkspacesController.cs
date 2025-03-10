@@ -1,6 +1,7 @@
 ﻿using IdeaPilot.Rest.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SemanticKernel;
+using IdeaPilot.Rest.SignalR;
 
 namespace IdeaPilot.Rest.Controllers;
 
@@ -9,12 +10,22 @@ namespace IdeaPilot.Rest.Controllers;
 public class WorkspacesController : ControllerBase
 {
     private readonly ICosmosDbRepository<Workspace> _workspaceRepository;
+    private readonly ICosmosDbRepository<Chat> _chatRepository;
+    private readonly ICosmosDbRepository<Message> _messageRepository;
     private readonly Kernel _kernel;
     private readonly ILogger<WorkspacesController> _logger;
 
-    public WorkspacesController(ICosmosDbRepository<Workspace> workspaceRepository, Kernel kernel, ILogger<WorkspacesController> logger)
+    public WorkspacesController(
+        ICosmosDbRepository<Workspace> workspaceRepository,
+        ICosmosDbRepository<Chat> chatRepository,
+        ICosmosDbRepository<Message> messageRepository,
+        Kernel kernel,
+        ILogger<WorkspacesController> logger
+        )
     {
         _workspaceRepository = workspaceRepository;
+        _chatRepository = chatRepository;
+        _messageRepository = messageRepository;
         _kernel = kernel;
         _logger = logger;
     }
@@ -89,5 +100,18 @@ public class WorkspacesController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id}/chats")]
+    public async Task<IEnumerable<Chat>> GetWorkspaceChats(string id)
+    {
+        var chats = await _chatRepository.ListItemsAsync("WorkspaceId", id);
+        return chats.OrderBy(c => c.CreatedOn);
+    }
+
+    [HttpGet("{id}/messages")]
+    public async Task<IEnumerable<Message>> GetWorkspaceMessages(string id)
+    {
+        var messages = await _messageRepository.ListItemsAsync("WorkspaceId", id);
+        return messages.OrderBy(m => m.CreatedOn);
+    }
 
 }

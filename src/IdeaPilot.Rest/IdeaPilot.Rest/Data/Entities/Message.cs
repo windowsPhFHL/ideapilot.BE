@@ -1,6 +1,6 @@
 ﻿namespace IdeaPilot.Rest.Data.Entities;
 
-public sealed class Message
+public sealed class Message: BaseDocument
 {
     //add id as a property, initialize it with a new guid and append `Message_` as a prefix
     public string id { get; set; } = Guid.NewGuid().ToString("N").Insert(0, "Message_");
