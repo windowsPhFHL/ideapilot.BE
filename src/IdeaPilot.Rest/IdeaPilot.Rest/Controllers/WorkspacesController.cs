@@ -1,8 +1,7 @@
 ﻿using IdeaPilot.Rest.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SemanticKernel;
 using IdeaPilot.Rest.SignalR;
-
+using Azure.AI.OpenAI;
 namespace IdeaPilot.Rest.Controllers;
 
 [Route("api/[controller]")]
@@ -12,21 +11,21 @@ public class WorkspacesController : ControllerBase
     private readonly ICosmosDbRepository<Workspace> _workspaceRepository;
     private readonly ICosmosDbRepository<Chat> _chatRepository;
     private readonly ICosmosDbRepository<Message> _messageRepository;
-    private readonly Kernel _kernel;
+    private readonly OpenAIClient _openAIClient;
     private readonly ILogger<WorkspacesController> _logger;
 
     public WorkspacesController(
         ICosmosDbRepository<Workspace> workspaceRepository,
         ICosmosDbRepository<Chat> chatRepository,
         ICosmosDbRepository<Message> messageRepository,
-        Kernel kernel,
+        OpenAIClient openAIClient,
         ILogger<WorkspacesController> logger
         )
     {
         _workspaceRepository = workspaceRepository;
         _chatRepository = chatRepository;
         _messageRepository = messageRepository;
-        _kernel = kernel;
+        _openAIClient = openAIClient;
         _logger = logger;
     }
 
@@ -113,5 +112,4 @@ public class WorkspacesController : ControllerBase
         var messages = await _messageRepository.ListItemsAsync("WorkspaceId", id);
         return messages.OrderBy(m => m.CreatedOn);
     }
-
 }

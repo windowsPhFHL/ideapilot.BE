@@ -1,7 +1,7 @@
 ﻿using IdeaPilot.Rest.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SemanticKernel;
+using Azure.AI.OpenAI;
 
 namespace IdeaPilot.Rest.Controllers
 {
@@ -9,14 +9,17 @@ namespace IdeaPilot.Rest.Controllers
     [ApiController]
     public class MessagesController : ControllerBase
     {
-        //initialize messagesRepository, _kernel and _logger
         private readonly ICosmosDbRepository<Message> _messagesRepository;
-        private readonly Kernel _kernel;
+        private readonly OpenAIClient _openAIClient;
         private readonly ILogger<MessagesController> _logger;
-        public MessagesController(ICosmosDbRepository<Message> messagesRepository, Kernel kernel, ILogger<MessagesController> logger)
+
+        public MessagesController(
+            ICosmosDbRepository<Message> messagesRepository,
+            OpenAIClient openAIClient,
+            ILogger<MessagesController> logger)
         {
             _messagesRepository = messagesRepository;
-            _kernel = kernel;
+            _openAIClient = openAIClient;
             _logger = logger;
         }
 
@@ -80,6 +83,5 @@ namespace IdeaPilot.Rest.Controllers
             await _messagesRepository.DeleteItemAsync(id, id);
             return NoContent();
         }
-
     }
 }
