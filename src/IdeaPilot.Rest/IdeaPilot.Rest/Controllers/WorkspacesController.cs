@@ -5,7 +5,7 @@ using IdeaPilot.Rest.SignalR;
 
 namespace IdeaPilot.Rest.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/workspaces")]
 [ApiController]
 public class WorkspacesController : ControllerBase
 {
@@ -103,14 +103,14 @@ public class WorkspacesController : ControllerBase
     [HttpGet("{id}/chats")]
     public async Task<IEnumerable<Chat>> GetWorkspaceChats(string id)
     {
-        var chats = await _chatRepository.ListItemsAsync("WorkspaceId", id);
+        var chats = await _chatRepository.ListItemsByContainerTypeAsync("WorkspaceId", id, "ContainerType", "Chat");
         return chats.OrderBy(c => c.CreatedOn);
     }
 
     [HttpGet("{id}/messages")]
     public async Task<IEnumerable<Message>> GetWorkspaceMessages(string id)
     {
-        var messages = await _messageRepository.ListItemsAsync("WorkspaceId", id);
+        var messages = await _messageRepository.ListItemsByContainerTypeAsync("WorkspaceId", id, "ContainerType", "Message");
         return messages.OrderBy(m => m.CreatedOn);
     }
 
