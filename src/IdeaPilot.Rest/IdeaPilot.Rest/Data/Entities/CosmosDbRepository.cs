@@ -148,7 +148,7 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
     async Task<T> ICosmosDbRepository<T>.GetItemByPartitionKeyAsync(string partitionKey)
     {
         // Create a SQL query to filter items based on the partition key
-        string sqlQuery = $"SELECT * FROM c WHERE c.partitionKey = @partitionKey";
+        string sqlQuery = $"SELECT * FROM c WHERE c.id = @partitionKey";
         var queryDefinition = new QueryDefinition(sqlQuery)
             .WithParameter("@partitionKey", partitionKey);
         var query = _container.GetItemQueryIterator<T>(queryDefinition);
@@ -192,5 +192,22 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
             results.AddRange(response);
         }
         return Task.FromResult(results.FirstOrDefault());
+    }
+
+    Task<IEnumerable<T>> ICosmosDbRepository<T>.ListItemsByContainerTypeAsync(string propertyName, string propertyValue, string containerType, string containerTypeValue)
+    {
+        // Create a SQL query to filter items based on the property name and value
+        string sqlQuery = $"SELECT * FROM c WHERE c.{propertyName} = @propertyValue AND c.{containerType} = @containerTypeValue";
+        var queryDefinition = new QueryDefinition(sqlQuery)
+            .WithParameter("@propertyValue", propertyValue)
+            .WithParameter("@containerTypeValue", containerTypeValue);
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = query.ReadNextAsync().Result;
+            results.AddRange(response);
+        }
+        return Task.FromResult(results.AsEnumerable());
     }
 }
