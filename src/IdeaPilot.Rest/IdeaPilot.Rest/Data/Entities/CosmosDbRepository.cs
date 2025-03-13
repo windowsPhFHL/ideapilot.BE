@@ -1,4 +1,4 @@
-﻿using IdeaPilot.Rest.Configuration;
+using IdeaPilot.Rest.Configuration;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 
@@ -194,13 +194,48 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
         return Task.FromResult(results.FirstOrDefault());
     }
 
-    Task<IEnumerable<T>> ICosmosDbRepository<T>.ListItemsByContainerTypeAsync(string propertyName, string propertyValue, string containerType, string containerTypeValue)
+    Task<T> ICosmosDbRepository<T>.GetItemAsync(Dictionary<string, string> properties)
     {
-        // Create a SQL query to filter items based on the property name and value
-        string sqlQuery = $"SELECT * FROM c WHERE c.{propertyName} = @propertyValue AND c.{containerType} = @containerTypeValue";
-        var queryDefinition = new QueryDefinition(sqlQuery)
-            .WithParameter("@propertyValue", propertyValue)
-            .WithParameter("@containerTypeValue", containerTypeValue);
+        // Create a SQL query to filter items based on the key-value pairs in the dictionary
+        string sqlQuery = "SELECT * FROM c WHERE ";
+        var parameters = new List<string>();
+        foreach (var property in properties)
+        {
+            sqlQuery += $"c.{property.Key} = @{property.Key} AND ";
+            parameters.Add($"@{property.Key}");
+        }
+        sqlQuery = sqlQuery.TrimEnd(" AND ".ToCharArray());
+        var queryDefinition = new QueryDefinition(sqlQuery);
+        foreach (var property in properties)
+        {
+            queryDefinition.WithParameter($"@{property.Key}", property.Value);
+        }
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = query.ReadNextAsync().Result;
+            results.AddRange(response);
+        }
+        return Task.FromResult(results.FirstOrDefault());
+    }
+
+    Task<IEnumerable<T>> ICosmosDbRepository<T>.ListItemsAsync(Dictionary<string, string> properties)
+    {
+        // Create a SQL query to filter items based on the key-value pairs in the dictionary
+        string sqlQuery = "SELECT * FROM c WHERE ";
+        var parameters = new List<string>();
+        foreach (var property in properties)
+        {
+            sqlQuery += $"c.{property.Key} = @{property.Key} AND ";
+            parameters.Add($"@{property.Key}");
+        }
+        sqlQuery = sqlQuery.TrimEnd(" AND ".ToCharArray());
+        var queryDefinition = new QueryDefinition(sqlQuery);
+        foreach (var property in properties)
+        {
+            queryDefinition.WithParameter($"@{property.Key}", property.Value);
+        }
         var query = _container.GetItemQueryIterator<T>(queryDefinition);
         var results = new List<T>();
         while (query.HasMoreResults)
@@ -209,5 +244,5 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
             results.AddRange(response);
         }
         return Task.FromResult(results.AsEnumerable());
-    }
+    }   
 }
