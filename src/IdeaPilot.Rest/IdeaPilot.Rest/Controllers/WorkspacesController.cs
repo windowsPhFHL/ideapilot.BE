@@ -1,7 +1,7 @@
 ﻿using IdeaPilot.Rest.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using IdeaPilot.Rest.SignalR;
-using Azure.AI.OpenAI;
+
 namespace IdeaPilot.Rest.Controllers;
 
 [Route("api/workspaces")]
@@ -31,10 +31,14 @@ public class WorkspacesController : ControllerBase
     public IEnumerable<Workspace> Get()
     {
         //list all workspaces in the cosmos db
-        var workspaces = _workspaceRepository.ListItemsAsync("ContainerType", "Workspace").Result;
+        Dictionary<string, string> properties = new Dictionary<string, string>
+        {
+            { "ContainerType", "Workspace" }
+        };
+        var workspaces = _workspaceRepository.ListItemsAsync(properties).Result;
 
         //return the list of workspaces
-        return workspaces;// workspaces.Select(workspace => new Workspace(workspace.WorkspaceId, workspace.Name, workspace.Description));
+        return workspaces;
     }
 
     // POST api/<WorkspacesController>
@@ -49,9 +53,11 @@ public class WorkspacesController : ControllerBase
         //create a new workspace from the request body
         var newWorkspace = new Workspace
         {
+            id = Guid.NewGuid().ToString("N").Insert(0, "Workspace_"),
             Name = workspace.Name,
             Description = workspace.Description,
-            AttributeName = workspace.AttributeName
+            CreatedOn = DateTime.UtcNow,
+            ContainerType = "Workspace"
         };
 
         var createdWorkspace = await _workspaceRepository.CreateItemAsync(newWorkspace, newWorkspace.id);
@@ -61,6 +67,7 @@ public class WorkspacesController : ControllerBase
         }
         return CreatedAtAction(nameof(GetWorkspace), new { id = createdWorkspace.id }, createdWorkspace);
     }
+
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetWorkspace(string id)
@@ -74,18 +81,27 @@ public class WorkspacesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateWorkspace(Guid id, [FromBody] Workspace workspace)
+    public async Task<IActionResult> UpdateWorkspace(string id, [FromBody] Workspace workspace)
     {
         if (workspace == null)
         {
             return BadRequest("Invalid workspace data");
         }
+
+        //get the workspace from the cosmos db
+        var existingWorkspace = await _workspaceRepository.GetItemAsync(id.ToString(), id.ToString());
+
+        if (existingWorkspace == null)
+        {
+            return NotFound();
+        }
+
         var updatedWorkspace = await _workspaceRepository.UpdateItemAsync(id.ToString(), id.ToString(), workspace);
         return Ok(updatedWorkspace);
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteWorkspace(Guid id)
+    public async Task<IActionResult> DeleteWorkspace(string id)
     {
         var workspace = await _workspaceRepository.GetItemAsync(id.ToString(), id.ToString());
         if (workspace == null)
@@ -119,4 +135,5 @@ public class WorkspacesController : ControllerBase
         var messages = await _messageRepository.ListItemsAsync(properties);
         return messages.OrderBy(m => m.CreatedOn);
     }
+
 }
