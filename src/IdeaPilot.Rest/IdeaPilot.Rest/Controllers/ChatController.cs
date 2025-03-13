@@ -113,6 +113,7 @@
 using Microsoft.AspNetCore.Mvc;
 using IdeaPilot.Rest.Services;
 using IdeaPilot.Rest.Data.Models;
+using IdeaPilot.Rest.Data.Entities;
 
 namespace IdeaPilot.Rest.Controllers
 {
@@ -128,16 +129,16 @@ namespace IdeaPilot.Rest.Controllers
         }
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendMessage([FromBody] ChatMessage message)
+        public async Task<IActionResult> SendMessage([FromBody] Message message)
         {
-            if (message == null || string.IsNullOrEmpty(message.ChatSessionId) || string.IsNullOrEmpty(message.Message))
-            {
-                return BadRequest("Invalid message data");
-            }
+            //if (message == null || string.IsNullOrEmpty(message.ChatSessionId) || string.IsNullOrEmpty(message.Message))
+            //{
+            //    return BadRequest("Invalid message data");
+            //}
 
-            await _chatService.SaveChatMessageAsync(message.ChatSessionId, message.User, message.Message);
+            //await _chatService.SaveChatMessageAsync(message.ChatSessionId, message.User, message.Message);
 
-            string chatResponse = await _chatService.GetChatResponseAsync(message.Message);
+            string chatResponse = await _chatService.GetChatResponseAsync(message);
             return Ok(new { result = chatResponse });
         }
 

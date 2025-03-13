@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Azure.AI.OpenAI;
+using IdeaPilot.Rest.Services;
 
 namespace IdeaPilot.Rest.Controllers
 {
@@ -12,16 +13,33 @@ namespace IdeaPilot.Rest.Controllers
         private readonly ICosmosDbRepository<Message> _messagesRepository;
         private readonly OpenAIClient _openAIClient;
         private readonly ILogger<MessagesController> _logger;
+        private readonly ChatService _chatService;
 
         public MessagesController(
             ICosmosDbRepository<Message> messagesRepository,
             OpenAIClient openAIClient,
+            ChatService chatService,
             ILogger<MessagesController> logger)
         {
             _messagesRepository = messagesRepository;
             _openAIClient = openAIClient;
             _logger = logger;
+            _chatService = chatService;
         }
+
+        // GET: api/messages
+        [HttpGet]
+        public async Task<IActionResult> GetMessages()
+        {
+
+            Dictionary<string, string> props = new Dictionary<string, string>();
+            //set the partition key to the user id
+            props.Add("ContainerType", "Message");
+            //list all messages in the cosmos db
+            var messages = await _messagesRepository.ListItemsAsync(props);
+            //return the list of messages
+            return Ok(messages);
+        }  
 
         // endpoint to create a new message
         [HttpPost]
@@ -47,7 +65,11 @@ namespace IdeaPilot.Rest.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error creating message");
             }
-            return CreatedAtAction(nameof(GetMessage), new { id = newMessage.id }, createdMessage);
+
+
+            await _chatService.ProcessModelMessages(newMessage);
+
+            return CreatedAtAction(nameof(GetMessage), new { id = newMessage.id }, newMessage);
         }
 
         [HttpGet("{id}")]

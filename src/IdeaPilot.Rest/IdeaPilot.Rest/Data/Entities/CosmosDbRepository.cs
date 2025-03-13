@@ -193,4 +193,56 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
         }
         return Task.FromResult(results.FirstOrDefault());
     }
+
+    Task<T> ICosmosDbRepository<T>.GetItemAsync(Dictionary<string, string> properties)
+    {
+        // Create a SQL query to filter items based on the key-value pairs in the dictionary
+        string sqlQuery = "SELECT * FROM c WHERE ";
+        var parameters = new List<string>();
+        foreach (var property in properties)
+        {
+            sqlQuery += $"c.{property.Key} = @{property.Key} AND ";
+            parameters.Add($"@{property.Key}");
+        }
+        sqlQuery = sqlQuery.TrimEnd(" AND ".ToCharArray());
+        var queryDefinition = new QueryDefinition(sqlQuery);
+        foreach (var property in properties)
+        {
+            queryDefinition.WithParameter($"@{property.Key}", property.Value);
+        }
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = query.ReadNextAsync().Result;
+            results.AddRange(response);
+        }
+        return Task.FromResult(results.FirstOrDefault());
+    }
+
+    Task<IEnumerable<T>> ICosmosDbRepository<T>.ListItemsAsync(Dictionary<string, string> properties)
+    {
+        // Create a SQL query to filter items based on the key-value pairs in the dictionary
+        string sqlQuery = "SELECT * FROM c WHERE ";
+        var parameters = new List<string>();
+        foreach (var property in properties)
+        {
+            sqlQuery += $"c.{property.Key} = @{property.Key} AND ";
+            parameters.Add($"@{property.Key}");
+        }
+        sqlQuery = sqlQuery.TrimEnd(" AND ".ToCharArray());
+        var queryDefinition = new QueryDefinition(sqlQuery);
+        foreach (var property in properties)
+        {
+            queryDefinition.WithParameter($"@{property.Key}", property.Value);
+        }
+        var query = _container.GetItemQueryIterator<T>(queryDefinition);
+        var results = new List<T>();
+        while (query.HasMoreResults)
+        {
+            FeedResponse<T> response = query.ReadNextAsync().Result;
+            results.AddRange(response);
+        }
+        return Task.FromResult(results.AsEnumerable());
+    }
 }

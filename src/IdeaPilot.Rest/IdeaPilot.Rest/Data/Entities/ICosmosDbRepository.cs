@@ -25,4 +25,10 @@ public interface ICosmosDbRepository<T> where T : class
     Task<T> GetItemAsync(string propertyName1, string propertyValue1, string propertyName2, string propertyValue2);
 
     Task<T> GetItemSync(string propertyName1, string propertyValue1);
+
+    //create a method to get an item in the container based on a key value pair of properties
+    Task<T> GetItemAsync(Dictionary<string, string> properties);
+
+    //create a method to get a list of items in the container based on a key value pair of properties
+    Task<IEnumerable<T>> ListItemsAsync(Dictionary<string, string> properties);
 }

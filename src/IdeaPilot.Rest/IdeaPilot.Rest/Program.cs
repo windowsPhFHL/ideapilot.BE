@@ -39,6 +39,11 @@ namespace IdeaPilot.Rest
                 builder.Configuration.GetSection("OpenAI")
             );
 
+            // Configure Azure Blob Storage Options
+            builder.Services.Configure<AzureBlobStorageOptions>(
+                builder.Configuration.GetSection("AzureBlobStorage")
+            );
+
             // Register OpenAIClient as Singleton
             builder.Services.AddSingleton<OpenAIClient>(serviceProvider =>
             {
@@ -69,11 +74,18 @@ namespace IdeaPilot.Rest
                 return new CosmosClient(cosmosDbOptions.AccountEndpoint, new DefaultAzureCredential(), cosmosClientOptions);
             });
 
+            // Register BlobServiceClient as Singleton
+            builder.Services.AddSingleton<BlobServiceClient>(serviceProvider =>
+            {
+                var blobStorageOptions = serviceProvider.GetRequiredService<IOptions<AzureBlobStorageOptions>>().Value;
+                return new BlobServiceClient(new Uri(blobStorageOptions.Endpoint), new DefaultAzureCredential());
+            });
+
             // Register CosmosDB Repository
             builder.Services.AddSingleton(typeof(ICosmosDbRepository<>), typeof(CosmosDbRepository<>));
 
-            // ✅ Register ChatService (Fixes "Unable to resolve service" error)
-            builder.Services.AddScoped<ChatService>();
+            // Register ChatService (Fixes "Unable to resolve service" error)
+            builder.Services.AddSingleton<ChatService>();
 
             // CORS Policy
             builder.Services.AddCors(options =>
@@ -98,14 +110,6 @@ namespace IdeaPilot.Rest
             builder.Logging.AddConsole();
 
             var app = builder.Build();
-
-            builder.Services.AddSingleton(serviceProvider =>
-            {
-                var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-                string blobServiceEndpoint = configuration["AzureBlobStorage:Endpoint"];
-                return new BlobServiceClient(new Uri(blobServiceEndpoint), new DefaultAzureCredential());
-            });
-
 
             // Enable Swagger for API Documentation
             if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
