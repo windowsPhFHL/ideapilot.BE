@@ -11,21 +11,18 @@ public class WorkspacesController : ControllerBase
     private readonly ICosmosDbRepository<Workspace> _workspaceRepository;
     private readonly ICosmosDbRepository<Chat> _chatRepository;
     private readonly ICosmosDbRepository<Message> _messageRepository;
-    private readonly OpenAIClient _openAIClient;
     private readonly ILogger<WorkspacesController> _logger;
 
     public WorkspacesController(
         ICosmosDbRepository<Workspace> workspaceRepository,
         ICosmosDbRepository<Chat> chatRepository,
         ICosmosDbRepository<Message> messageRepository,
-        OpenAIClient openAIClient,
         ILogger<WorkspacesController> logger
         )
     {
         _workspaceRepository = workspaceRepository;
         _chatRepository = chatRepository;
         _messageRepository = messageRepository;
-        _openAIClient = openAIClient;
         _logger = logger;
     }
 
