@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IdeaPilot.Rest.Controllers
 {
-    [Route("api/Workspace")]
+    [Route("api/workspace")]
     [ApiController]
     public class WorkspaceParticipantController : Controller
     {
@@ -11,7 +11,9 @@ namespace IdeaPilot.Rest.Controllers
         private readonly ICosmosDbRepository<WorkspaceParticipant> _workspaceParticipantRepository;
         private readonly ICosmosDbRepository<Workspace> _workspaceRepository;
         private readonly ILogger<WorkspaceParticipantController> _logger;
-        public WorkspaceParticipantController(ICosmosDbRepository<WorkspaceParticipant> workspaceParticipantRepository, ILogger<WorkspaceParticipantController> logger, ICosmosDbRepository<Workspace> workspaceRepository)
+        public WorkspaceParticipantController(
+            ICosmosDbRepository<WorkspaceParticipant> workspaceParticipantRepository,
+            ILogger<WorkspaceParticipantController> logger, ICosmosDbRepository<Workspace> workspaceRepository)
         {
             _workspaceParticipantRepository = workspaceParticipantRepository;
             _logger = logger;
@@ -36,7 +38,13 @@ namespace IdeaPilot.Rest.Controllers
         [HttpPost("{id}/join")]
         public async Task<IActionResult> JoinWorkspace(string id, [FromBody] string userId)
         {
-            var workspace = await _workspaceRepository.GetItemSync("WorkspaceId",id);
+            Dictionary<string, string> properties = new Dictionary<string, string>
+            {
+                { "ContainerType", "Workspace" },
+                { "id", id }
+            };
+
+            var workspace = await _workspaceRepository.GetItemAsync(properties);
             if (workspace == null)
             {
                 return NotFound("Workspace not found");
@@ -49,7 +57,7 @@ namespace IdeaPilot.Rest.Controllers
             var newWorkspaceParticipant = new WorkspaceParticipant
             {
                 UserId = userId,
-                WorkspaceId = workspace.WorkspaceId.ToString(),
+                WorkspaceId = workspace.id.ToString(),
             };
             var createdWorkspaceParticipant = await _workspaceParticipantRepository.CreateItemAsync(newWorkspaceParticipant, newWorkspaceParticipant.id);
             if (createdWorkspaceParticipant == null)
@@ -63,14 +71,23 @@ namespace IdeaPilot.Rest.Controllers
         [HttpPost("{id}/leave")]
         public async Task<IActionResult> LeaveWorkspace(string id, [FromBody] string userId)
         {
-
-            var workspace = await _workspaceParticipantRepository.GetItemAsync("WorkspaceId", id.ToString(), "UserId", userId.ToString());
+            Dictionary<string, string> properties = new Dictionary<string, string>
+            {
+                { "ContainerType", "WorkspaceParticipant" },
+                { "WorkspaceId", id },
+                { "UserId", userId }
+            };
+            var workspace = await _workspaceParticipantRepository.GetItemAsync(properties);
             if (workspace == null)
             {
+                //log the error
+                _logger.LogError($"User {userId} not found in workspace {id}");
                 return NotFound();
             }
-            await _workspaceParticipantRepository.DeleteItemAsync(workspace.id, id.ToString());
-            return NoContent();
+            await _workspaceParticipantRepository.DeleteItemAsync(workspace.id, workspace.id);
+
+            //return deleted success instead of 404 NoContent()
+            return Ok("User left the workspace");
         }
     }
 }
