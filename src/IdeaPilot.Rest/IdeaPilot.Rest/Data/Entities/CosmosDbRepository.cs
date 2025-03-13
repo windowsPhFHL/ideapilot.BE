@@ -1,4 +1,4 @@
-﻿using IdeaPilot.Rest.Configuration;
+using IdeaPilot.Rest.Configuration;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 
@@ -148,7 +148,7 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
     async Task<T> ICosmosDbRepository<T>.GetItemByPartitionKeyAsync(string partitionKey)
     {
         // Create a SQL query to filter items based on the partition key
-        string sqlQuery = $"SELECT * FROM c WHERE c.partitionKey = @partitionKey";
+        string sqlQuery = $"SELECT * FROM c WHERE c.id = @partitionKey";
         var queryDefinition = new QueryDefinition(sqlQuery)
             .WithParameter("@partitionKey", partitionKey);
         var query = _container.GetItemQueryIterator<T>(queryDefinition);

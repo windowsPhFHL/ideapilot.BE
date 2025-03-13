@@ -118,14 +118,19 @@ using IdeaPilot.Rest.Data.Entities;
 namespace IdeaPilot.Rest.Controllers
 {
     [ApiController]
-    [Route("api/chat")]
-    public class ChatController : ControllerBase
+    [Route("api/[controller]")]
+    public class ChatController : Controller
     {
-        private readonly ChatService _chatService;
-
-        public ChatController(ChatService chatService)
+        //create crud operations for Chat
+        //initialize chatRepository, _kernel and _logger
+        private readonly ICosmosDbRepository<Chat> _chatRepository;
+        private readonly Kernel _kernel;
+        private readonly ILogger<ChatController> _logger;
+        public ChatController(ICosmosDbRepository<Chat> chatRepository, Kernel kernel, ILogger<ChatController> logger)
         {
-            _chatService = chatService;
+            _chatRepository = chatRepository;
+            _kernel = kernel;
+            _logger = logger;
         }
 
         [HttpPost("send")]
@@ -154,10 +159,17 @@ namespace IdeaPilot.Rest.Controllers
             return Ok(history);
         }
 
-        [HttpDelete("history/{sessionId}")]
-        public async Task<IActionResult> DeleteChatHistory(string sessionId)
+        // DELETE api/<ChatController>/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteChat(string id)
         {
-            return Ok($"✅ All messages under Session ID: {sessionId} have been deleted");
+            var chat = await _chatRepository.GetItemByPartitionKeyAsync(id);
+            if (chat == null)
+            {
+                return NotFound();
+            }
+            await _chatRepository.DeleteItemAsync(id, id);
+            return NoContent();
         }
     }
 }
