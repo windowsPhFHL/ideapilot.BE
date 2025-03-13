@@ -1,7 +1,7 @@
-﻿using IdeaPilot.Rest.Data.Entities;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using IdeaPilot.Rest.Data.Entities;
 using IdeaPilot.Rest.SignalR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SemanticKernel;
 
 namespace IdeaPilot.Rest.Controllers
 {
@@ -12,12 +12,10 @@ namespace IdeaPilot.Rest.Controllers
         //create crud operations for Chat
         //initialize chatRepository, _kernel and _logger
         private readonly ICosmosDbRepository<Chat> _chatRepository;
-        private readonly Kernel _kernel;
         private readonly ILogger<ChatController> _logger;
-        public ChatController(ICosmosDbRepository<Chat> chatRepository, Kernel kernel, ILogger<ChatController> logger)
+        public ChatController(ICosmosDbRepository<Chat> chatRepository, ILogger<ChatController> logger)
         {
             _chatRepository = chatRepository;
-            _kernel = kernel;
             _logger = logger;
         }
 
@@ -26,7 +24,7 @@ namespace IdeaPilot.Rest.Controllers
         public IActionResult Get()
         {
             //list all chats in the cosmos db
-            var chats = _chatRepository.ListItemsAsync("containerType","Chat").Result;
+            var chats = _chatRepository.ListItemsAsync("containerType", "Chat").Result;
             //return the list of chats
             return Ok(chats);
         }
@@ -44,7 +42,8 @@ namespace IdeaPilot.Rest.Controllers
             var newChat = new Chat
             {
                 Name = chat.Name,
-                Description = chat.Description
+                Description = chat.Description,
+                WorkspaceId = chat.WorkspaceId,
             };
 
             var createdChat = await _chatRepository.CreateItemAsync(newChat, newChat.id);

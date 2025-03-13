@@ -1,140 +1,133 @@
-﻿using Azure.Identity;
+﻿using Azure;
+using Azure.AI.OpenAI;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using IdeaPilot.Rest.Configuration;
 using IdeaPilot.Rest.Data.Entities;
+using IdeaPilot.Rest.Services; // ✅ Import ChatService
 using IdeaPilot.Rest.SignalR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel;
 
-namespace IdeaPilot.Rest;
-
-public class Program
+namespace IdeaPilot.Rest
 {
-    public static void Main(string[] args)
+    public class Program
     {
-        Console.WriteLine("Hello World!");
-        var builder = WebApplication.CreateBuilder(args);
-
-        builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
-        // Retrieve configuration values (e.g., from appsettings.json, secrets, environment variables, etc.)
-
-        //string accountEndpoint = builder.Configuration["Cosmos:Endpoint"];
-             builder.Services.Configure<CosmosDbOptions>(
-            builder.Configuration.GetSection("CosmosDb")
-        );
-
-        // 1. Bind SemanticKernelOptions from config
-        builder.Services.Configure<SemanticKernelOptions>(
-            builder.Configuration.GetSection("SemanticKernel")
-        );
-
-
-        builder.Services.AddSingleton<Kernel>(serviceProvider =>
+        public static void Main(string[] args)
         {
-            // (Optional) If you want to pull config from IOptions:
-            var skOptions = serviceProvider.GetRequiredService<IOptions<SemanticKernelOptions>>().Value;
+            var builder = WebApplication.CreateBuilder(args);
 
-            var kernelBuilder = Kernel.CreateBuilder();
+            // Add controllers
+            builder.Services.AddControllers();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
-            // If using Azure OpenAI
-            kernelBuilder.AddOpenAIChatCompletion(
-                skOptions.DeploymentName, // "gpt-35-turbo" or similar
-                skOptions.Endpoint, // e.g. "https://contoso.openai.azure.com/"
-                skOptions.ApiKey // your Azure OpenAI Key
-                // optional: apiVersion: "2023-03-15-preview"
+            // Configure CosmosDB Options
+            builder.Services.Configure<CosmosDbOptions>(
+                builder.Configuration.GetSection("CosmosDb")
             );
-            return kernelBuilder.Build();
-        });
 
-        //register ChatHub class
-        //builder.Services.AddSingleton(typeof(Hub<>), typeof(ChatHub));
+            // Configure OpenAI Options
+            builder.Services.Configure<OpenAIOptions>(
+                builder.Configuration.GetSection("OpenAI")
+            );
 
-        // 2. Register a singleton IKernel
+            // Configure Azure Blob Storage Options
+            builder.Services.Configure<AzureBlobStorageOptions>(
+                builder.Configuration.GetSection("AzureBlobStorage")
+            );
 
-        // 2. Create a Singleton CosmosClient (the recommended pattern)
-        builder.Services.AddSingleton<CosmosClient>(serviceProvider =>
-        {
-            var cosmosDbOptions = serviceProvider.GetRequiredService<IOptions<CosmosDbOptions>>().Value;
-
-            // You can configure CosmosClientOptions if needed
-            var cosmosClientOptions = new CosmosClientOptions
+            // Register OpenAIClient as Singleton
+            builder.Services.AddSingleton<OpenAIClient>(serviceProvider =>
             {
-            };
+                var openAiOptions = serviceProvider.GetRequiredService<IOptions<OpenAIOptions>>().Value;
 
-            return new CosmosClient(cosmosDbOptions.AccountEndpoint, new DefaultAzureCredential(), cosmosClientOptions);
-        });
-        // Register the repository as a singleton or scoped, depending on your needs.
-        // Usually, a Cosmos DB client can be a singleton.
-
-        builder.Services.AddSingleton(typeof(ICosmosDbRepository<>), typeof(CosmosDbRepository<>));
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll",
-                builder =>
+                if (!string.IsNullOrEmpty(openAiOptions.ApiKey))
                 {
-                    builder
-                        .AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                });
-        });
-
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll",
-                builder =>
+                    return new OpenAIClient(
+                        new Uri(openAiOptions.Endpoint),
+                        new AzureKeyCredential(openAiOptions.ApiKey)
+                    );
+                }
+                else
                 {
-                    builder
-                        .AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
+                    return new OpenAIClient(
+                        new Uri(openAiOptions.Endpoint),
+                        new DefaultAzureCredential()
+                    );
+                }
+            });
+
+            // Register CosmosClient as Singleton
+            builder.Services.AddSingleton<CosmosClient>(serviceProvider =>
+            {
+                var cosmosDbOptions = serviceProvider.GetRequiredService<IOptions<CosmosDbOptions>>().Value;
+                var cosmosClientOptions = new CosmosClientOptions();
+
+                return new CosmosClient(cosmosDbOptions.AccountEndpoint, new DefaultAzureCredential(), cosmosClientOptions);
+            });
+
+            // Register BlobServiceClient as Singleton
+            builder.Services.AddSingleton<BlobServiceClient>(serviceProvider =>
+            {
+                var blobStorageOptions = serviceProvider.GetRequiredService<IOptions<AzureBlobStorageOptions>>().Value;
+                return new BlobServiceClient(new Uri(blobStorageOptions.Endpoint), new DefaultAzureCredential());
+            });
+
+            // Register CosmosDB Repository
+            builder.Services.AddSingleton(typeof(ICosmosDbRepository<>), typeof(CosmosDbRepository<>));
+
+            // Register ChatService (Fixes "Unable to resolve service" error)
+            builder.Services.AddSingleton<ChatService>();
+
+            // CORS Policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
                 });
-        });
+            });
 
-        builder.Services.AddSignalR();
+            // Register SignalR
+            builder.Services.AddSignalR();
 
-        builder.Services.Configure<AzureDevOpsSettings>(builder.Configuration.GetSection("AzureDevOps"));
-        builder.Services.AddSingleton<AzureDevOpsService>();
+            // Register Azure DevOps Settings and Service
+            builder.Services.Configure<AzureDevOpsSettings>(builder.Configuration.GetSection("AzureDevOps"));
+            builder.Services.AddSingleton<AzureDevOpsService>();
 
-        builder.Logging.ClearProviders();
-        builder.Logging.AddConsole();
-        
-        var app = builder.Build();
+            // Logging Configuration
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            var app = builder.Build();
+
+            // Enable Swagger for API Documentation
+            if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseAuthorization();
+            app.UseRouting();
+            app.UseCors("AllowAll");
+
+            // Map Controllers and SignalR Hub
+            app.MapControllers();
+            app.MapHub<ChatHub>("/chatHub").RequireCors("AllowAll");
+
+            app.Run();
         }
-        else
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
-        app.UseHttpsRedirection();
-
-        app.UseAuthorization();
-        app.UseRouting();
-
-        // Enable the CORS policy
-        app.UseCors("AllowAll");
-        app.MapControllers();
-        app.UseEndpoints(endpoints =>
-        {
-            // Map your controllers
-            endpoints.MapControllers();
-
-            // Map your SignalR hub
-            //endpoints.MapHub<ChatHub>("/chatHub");
-            endpoints.MapHub<ChatHub>("/chatHub").RequireCors("AllowAll");
-        });
-
-        app.Run();
     }
 }
