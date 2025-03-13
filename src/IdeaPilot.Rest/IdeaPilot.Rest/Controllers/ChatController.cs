@@ -12,10 +12,16 @@ namespace IdeaPilot.Rest.Controllers
         //create crud operations for Chat
         //initialize chatRepository, _kernel and _logger
         private readonly ICosmosDbRepository<Chat> _chatRepository;
+        private readonly ICosmosDbRepository<Message> _messageRepository;
         private readonly ILogger<ChatController> _logger;
-        public ChatController(ICosmosDbRepository<Chat> chatRepository, ILogger<ChatController> logger)
+        public ChatController(
+            ICosmosDbRepository<Chat> chatRepository,
+            ICosmosDbRepository<Message> messageRepository,
+            ILogger<ChatController> logger
+            )
         {
             _chatRepository = chatRepository;
+            _messageRepository = messageRepository;
             _logger = logger;
         }
 
@@ -94,5 +100,13 @@ namespace IdeaPilot.Rest.Controllers
             await _chatRepository.DeleteItemAsync(id, id);
             return NoContent();
         }
+
+        [HttpGet("{id}/messages")]
+        public async Task<IEnumerable<Message>> GetChatMessages(string id)
+        {
+            var messages = await _messageRepository.ListItemsAsync("ChatId", id);
+            return messages.OrderBy(m => m.CreatedOn);
+        }
+
     }
 }
