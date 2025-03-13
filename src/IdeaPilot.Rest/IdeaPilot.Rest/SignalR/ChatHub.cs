@@ -1,25 +1,23 @@
-﻿using IdeaPilot.Rest.Data.Entities;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using IdeaPilot.Rest.Data.Entities;
 using IdeaPilot.Rest.Hubs;
 using Microsoft.AspNetCore.SignalR;
-using Azure.AI.OpenAI;
-using IdeaPilot.Rest.Services;
+using System;
 
 namespace IdeaPilot.Rest.SignalR;
 
 public class ChatHub : Hub
 {
+
+    //create a construsctor that takes a Kernel and a CosmosDbClient
     private readonly ILogger<ChatHub> _logger;
     private readonly ICosmosDbRepository<Message> _cosmosDbRepository;
-    private readonly ChatService _chatService;
 
-    public ChatHub(
-        ILogger<ChatHub> logger,
-        ICosmosDbRepository<Message> cosmosDbRepository,
-        ChatService chatService)
+    //add kernel to the constructor
+    public ChatHub(ILogger<ChatHub> logger, ICosmosDbRepository<Message> cosmosDbRepository)
     {
         _logger = logger;
         _cosmosDbRepository = cosmosDbRepository;
-        _chatService = chatService;
     }
 
     public async Task SendMessage(Message message)
@@ -28,20 +26,12 @@ public class ChatHub : Hub
         _logger.LogInformation($"Received message from {message.UserId}: {message.Text}");
 
         //create a new message from the message
-        var newMessage = new Message
-        {
-            UserId = message.UserId,
-            ChatId = message.ChatId,
-            WorkspaceId = message.WorkspaceId,
-            Text = message.Text,
-            Status = message.Status,
-            CreatedOn = DateTime.UtcNow
-        };
-        
-        await _chatService.ProcessModelMessages(newMessage);
 
-        await Clients.All.SendAsync($"Received message from {message.UserId} :  {message.Text}");
+        // Save the message to Cosmos DB
+        await _cosmosDbRepository.CreateItemAsync(message, message.id);
+        await Clients.All.SendAsync("ReceiveMessage", message.UserId, message);
     }
+
 
     // Method to get all messges from the Cosmos DB
     public async Task GetAllMessages()
@@ -70,6 +60,7 @@ public class ChatHub : Hub
         Console.WriteLine(sortedMessages);
         await Clients.Caller.SendAsync("GetChatMessages", sortedMessages);
     }
+
 
     // get specific chat messages using chatId
     public async Task GetWorkspaceMessages(string chatId)

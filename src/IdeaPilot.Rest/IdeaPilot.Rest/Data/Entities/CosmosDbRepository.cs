@@ -244,5 +244,5 @@ public class CosmosDbRepository<T> : ICosmosDbRepository<T> where T : class
             results.AddRange(response);
         }
         return Task.FromResult(results.AsEnumerable());
-    }
+    }   
 }

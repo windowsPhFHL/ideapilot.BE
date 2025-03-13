@@ -78,7 +78,7 @@ namespace IdeaPilot.Rest.Services
 
             var options = new ChatCompletionsOptions();
             options.MaxTokens = _maxTokens;
-            options.Temperature = _temperature;
+            options.Temperature = float.Parse(_temperature.ToString());
 
             //loop through chat items and log them
             foreach (var item in items.Result)
