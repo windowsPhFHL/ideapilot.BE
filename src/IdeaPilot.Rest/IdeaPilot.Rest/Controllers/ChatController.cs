@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IdeaPilot.Rest.Controllers
 {
+    [Route("api/chats")]
     [ApiController]
-    [Route("api/[controller]")]
     public class ChatController : Controller
     {
         //create crud operations for Chat

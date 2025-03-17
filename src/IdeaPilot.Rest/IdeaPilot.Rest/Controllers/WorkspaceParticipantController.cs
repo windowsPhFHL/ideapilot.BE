@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IdeaPilot.Rest.Controllers
 {
-    [Route("api/workspace")]
+    [Route("api/workspaceparticipants")]
     [ApiController]
     public class WorkspaceParticipantController : Controller
     {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using IdeaPilot.Rest.Data.Models;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/workitems")]
 public class WorkitemsController : ControllerBase
 {
     private readonly AzureDevOpsService _azureDevOpsService;
