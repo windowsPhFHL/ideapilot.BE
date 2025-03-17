@@ -135,5 +135,4 @@ public class WorkspacesController : ControllerBase
         var messages = await _messageRepository.ListItemsAsync(properties);
         return messages.OrderBy(m => m.CreatedOn);
     }
-
 }
