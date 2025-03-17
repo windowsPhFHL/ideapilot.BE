@@ -6,7 +6,7 @@ using IdeaPilot.Rest.Services;
 
 namespace IdeaPilot.Rest.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/messages")]
     [ApiController]
     public class MessagesController : ControllerBase
     {
