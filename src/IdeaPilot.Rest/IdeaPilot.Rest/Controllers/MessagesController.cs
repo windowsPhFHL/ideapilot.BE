@@ -74,7 +74,8 @@ namespace IdeaPilot.Rest.Controllers
                 message.Text.Contains("One-Pager", StringComparison.OrdinalIgnoreCase)
                 )
             {
-                await _chatService.ProcessModelMessages(newMessage);
+                CreatedAtAction(nameof(GetMessage), new { id = newMessage.id }, newMessage);
+                return Ok(await _chatService.ProcessModelMessages(newMessage));
             }
 
             return CreatedAtAction(nameof(GetMessage), new { id = newMessage.id }, newMessage);
