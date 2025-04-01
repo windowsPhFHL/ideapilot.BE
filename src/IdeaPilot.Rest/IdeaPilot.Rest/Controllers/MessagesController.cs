@@ -66,8 +66,16 @@ namespace IdeaPilot.Rest.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error creating message");
             }
 
-
-            await _chatService.ProcessModelMessages(newMessage);
+            if (
+                message.Text.Contains("one-pager", StringComparison.OrdinalIgnoreCase) ||
+                message.Text.Contains("one pager", StringComparison.OrdinalIgnoreCase) ||
+                message.Text.Contains("pager", StringComparison.OrdinalIgnoreCase) ||
+                message.Text.Contains("One pager", StringComparison.OrdinalIgnoreCase) ||
+                message.Text.Contains("One-Pager", StringComparison.OrdinalIgnoreCase)
+                )
+            {
+                await _chatService.ProcessModelMessages(newMessage);
+            }
 
             return CreatedAtAction(nameof(GetMessage), new { id = newMessage.id }, newMessage);
         }
