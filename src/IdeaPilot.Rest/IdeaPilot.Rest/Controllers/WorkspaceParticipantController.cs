@@ -24,9 +24,14 @@ namespace IdeaPilot.Rest.Controllers
         [HttpGet]
         public async Task<IActionResult> GetWorkspaceParticipants(string workspaceId)
         {
+            Dictionary<string, string> properties = new Dictionary<string, string>
+            {
+                { "WorkspaceId", workspaceId },
+                { "ContainerType", "WorkspaceParticipant" }
+            };
 
             //get all workspace participants from the cosmos db
-            var workspaceParticipants = await _workspaceParticipantRepository.ListItemsAsync("WorkspaceId", workspaceId);
+            var workspaceParticipants = await _workspaceParticipantRepository.ListItemsAsync(properties);
             if (workspaceParticipants == null)
             {
                 return NotFound("No workspace participants found");
